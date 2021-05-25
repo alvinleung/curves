@@ -4,6 +4,7 @@
   "description": "Boilerplate app for react-figma",
   "main": "./src/code.tsx",
   "scripts": {
+    "start": "webpack --watch",
     "webpack:watch": "webpack --watch"
   },
   "keywords": [
@@ -20,9 +21,11 @@
   "author": "Yaroslav Losev <losevyaroslav@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "cubic-spline-ts": "^3.0.8",
     "react": "^16.9.0",
     "react-dom": "^16.13.1",
     "react-figma": "latest",
+    "twgl.js": "^4.19.1",
     "yoga-layout-prebuilt": "^1.9.3"
   },
   "devDependencies": {

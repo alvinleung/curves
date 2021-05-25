@@ -795,6 +795,11 @@ csstype@^2.2.0:
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-2.6.10.tgz#e63af50e66d7c266edb6b32909cfd0aabe03928b"
   integrity sha512-D34BqZU4cIlMCY93rZHbrq9pjTAQJ3U8S8rfBqjwHxkGPThWFjzZDQpgMJY0QViLxth6ZKYiwFBo14RdN44U/w==
 
+cubic-spline-ts@^3.0.8:
+  version "3.0.8"
+  resolved "https://registry.yarnpkg.com/cubic-spline-ts/-/cubic-spline-ts-3.0.8.tgz#cab64153e37d82306a236adda1630d6d49acff27"
+  integrity sha512-eknnPF7IzbCGNqVj7wkWPsIegFHuRs4RtSc2L21J2o2PRuZZcZvVr23mPdARFhn1/DG9lqMcuz7jQ1W36y48nQ==
+
 cyclist@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/cyclist/-/cyclist-1.0.1.tgz#596e9698fd0c80e12038c2b82d6eb1b35b6224d9"
@@ -3272,6 +3277,11 @@ tty-browserify@0.0.0:
   version "0.0.0"
   resolved "https://registry.yarnpkg.com/tty-browserify/-/tty-browserify-0.0.0.tgz#a157ba402da24e9bf957f9aa69d524eed42901a6"
   integrity sha1-oVe6QC2iTpv5V/mqadUk7tQpAaY=
+
+twgl.js@^4.19.1:
+  version "4.19.1"
+  resolved "https://registry.yarnpkg.com/twgl.js/-/twgl.js-4.19.1.tgz#bf7216ae4d6aff333c5511b612e674b7672b2ea2"
+  integrity sha512-zI28+xIQskBXpnoX9rsJ2n6zrx0AN3yFZASyp4u1IBscndUKlzRBwNtnD17BoO+RzQieuJksPzJKy8H6lRa97A==
 
 typedarray@^0.0.6:
   version "0.0.6"
