@@ -1,7 +1,7 @@
 import { subscribeOnMessages } from "react-figma";
 
 figma.showUI(__html__);
-figma.ui.resize(600, 600);
+figma.ui.resize(400, 800);
 
 // this correct, but somehow the template doesn't recognise the "on" method under figma
 // @ts-ignore
@@ -22,6 +22,7 @@ figma.ui.onmessage = async (message) => {
     // ) as ComponentNode;
     // component.createInstance();
   }
+
   switch (message.type) {
     case "image-bytes-update":
       if (!currentSelectedNode) return;

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { getRelativeMousePosition } from "../hooks/relativeMousePos";
 
 export interface Point {
   x: number;
@@ -54,11 +55,7 @@ export const ControlPoint = ({
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
 
-      const pointPos = {
-        x: e.clientX - elmOffsetX,
-        y: e.clientY - elmOffsetY,
-      };
-
+      const pointPos = getRelativeMousePosition(containerRef.current, e);
       onChange && onChange(convertPointToValue(pointPos));
     };
 

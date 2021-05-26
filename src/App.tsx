@@ -1,14 +1,16 @@
 import * as React from "react";
-import { ControlPoint, Point } from "./ControlPoint";
+import { ControlPoint, Point } from "./components/ControlPoint";
 import Spline from "cubic-spline-ts";
-import { useCanvas, usePreviewCanvas } from "./useCanvas";
-import { useMeasurement } from "./useMeasurement";
+import { useCanvas } from "./hooks/useCanvas";
+import { useMeasurement } from "./hooks/useMeasurement";
 import {
   applyToneCurve,
   createDecodingCanvas,
   createImageFromByte,
   decode,
 } from "./ImageManipulation";
+import { getRelativeMousePosition } from "./hooks/relativeMousePos";
+import { useImagePreivew } from "./hooks/useImagePreview";
 
 type ComponentItemType = {
   id: string;
@@ -19,8 +21,7 @@ export const App = () => {
   const [isSelectedImage, setIsSelectedImage] = React.useState(false);
   const [imageBytes, setImageBytes] = React.useState<Uint8Array>();
 
-  const [previewCanvasRef, regl, toneCurveRef, changeImage] =
-    usePreviewCanvas();
+  const [previewCanvasRef, regl, toneCurveRef, changeImage] = useImagePreivew();
   const [canvasRef, ctx] = useCanvas();
 
   React.useEffect(() => {
@@ -164,8 +165,10 @@ export const App = () => {
 
   const [updateTimes, setUpdateTimes] = React.useState(0);
   const handleControlPointAdd = (e: React.MouseEvent) => {
-    const addX = (e.clientX - panelPosX) / panelWidth;
-    const addY = (e.clientY - panelPosY) / panelHeight;
+    const relativeMosuePos = getRelativeMousePosition(containerRef.current, e);
+
+    const addX = relativeMosuePos.x / panelWidth;
+    const addY = relativeMosuePos.y / panelHeight;
 
     // find the appropriate index
     const insertIndex = controlPoints.reduce((result, current, index) => {
