@@ -1,7 +1,7 @@
 import { subscribeOnMessages } from "react-figma";
 
 figma.showUI(__html__);
-figma.ui.resize(400, 800);
+figma.ui.resize(800, 400);
 
 // this correct, but somehow the template doesn't recognise the "on" method under figma
 // @ts-ignore

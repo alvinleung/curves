@@ -21,14 +21,29 @@ uniform vec4 color;
 uniform vec2 resolution; 
 uniform vec2 imageSize; 
 
-uniform float splineX[10];
-uniform float splineY[10];
-uniform float splineK[10];
+uniform float splineX_red[10];
+uniform float splineY_red[10];
+uniform float splineK_red[10];
+
+uniform float splineX_green[10];
+uniform float splineY_green[10];
+uniform float splineK_green[10];
+
+uniform float splineX_blue[10];
+uniform float splineY_blue[10];
+uniform float splineK_blue[10];
+
+uniform float splineX_luminance[10];
+uniform float splineY_luminance[10];
+uniform float splineK_luminance[10];
+
+
+
+uniform vec4 backgroundColor;
 
 uniform sampler2D currentImage;
 varying vec2 vTexCoord;
 
-const vec4 EMPTY_CLR = vec4(.25,.25,.25,1);
 
 float atSpline(float x, float xs[10], float ys[10], float ks[10]) {
   // int i = 1;
@@ -41,7 +56,7 @@ float atSpline(float x, float xs[10], float ys[10], float ks[10]) {
       float t = (x - xs[i - 1]) / (xs[i] - xs[i - 1]);
   
       float a = ks[i - 1] * (xs[i] - xs[i - 1]) - (ys[i] - ys[i - 1]);
-      float b = -ks[i] * (xs[i] - xs[i - 1] + (ys[i] - ys[i - 1]));
+      float b = -ks[i] * (xs[i] - xs[i - 1]) + (ys[i] - ys[i - 1]);
 
       q = (1.0 - t) * ys[i - 1] + t * ys[i] + t * (1.0 - t) * (a * (1.0 - t) + b * t);
 
@@ -117,34 +132,57 @@ void main() {
 
   // paint black if it is outside the bound of texture
   if(coordPos.x < 0.0 || coordPos.y < 0.0 || coordPos.x > 1.0 || coordPos.y > 1.0) {
-    gl_FragColor = EMPTY_CLR;
+    gl_FragColor = backgroundColor;
     return;
   }
 
   // apply tone curve adjustment to the picture
   vec4 pixelColor = texture2D(currentImage, coordPos);
 
+
   float rOriginal = pixelColor.x;
   float gOriginal = pixelColor.y; 
   float bOriginal = pixelColor.z;
+  
+  float rLuminance = atSpline(rOriginal, splineX_luminance, splineY_luminance, splineK_luminance);
+  float gLuminance = atSpline(gOriginal, splineX_luminance, splineY_luminance, splineK_luminance);
+  float bLuminance = atSpline(bOriginal, splineX_luminance, splineY_luminance, splineK_luminance);
 
-  float r = atSpline(rOriginal, splineX, splineY, splineK);
-  float g = atSpline(gOriginal, splineX, splineY, splineK);
-  float b = atSpline(bOriginal, splineX, splineY, splineK);
-  float a = 1.0;
+  float r = atSpline(rOriginal, splineX_red, splineY_red, splineK_red);
+  float g = atSpline(gOriginal, splineX_green, splineY_green, splineK_green);
+  float b = atSpline(bOriginal, splineX_blue, splineY_blue, splineK_blue);
 
-  gl_FragColor = vec4(r,g,b,a);
+  float rChannelOut = r;
+  float gChannelOut = g;
+  float bChannelOut = b;
+  float aChannelOut = 1.0;
+
+  gl_FragColor = vec4(rChannelOut,gChannelOut,bChannelOut,aChannelOut);
 }
 `;
+
+interface ToneCurves {
+  red: Spline;
+  green: Spline;
+  blue: Spline;
+  luminance: Spline;
+}
+
+const emptySpline = new Spline([0, 1], [0, 1]);
 
 export function useImagePreivew(): [
   React.Ref<HTMLCanvasElement>,
   WebGLRenderingContext,
-  React.MutableRefObject<Spline>,
+  React.MutableRefObject<ToneCurves>,
   (image: HTMLImageElement) => void
 ] {
   const canvasRef = React.useRef<HTMLCanvasElement>();
-  const toneCurveRef = React.useRef<Spline>(null);
+  const toneCurveRef = React.useRef<ToneCurves>({
+    red: emptySpline,
+    green: emptySpline,
+    blue: emptySpline,
+    luminance: emptySpline,
+  });
   const _gl = React.useRef<WebGLRenderingContext>();
 
   const imageTextureRef = React.useRef<WebGLTexture>(null);
@@ -178,14 +216,11 @@ export function useImagePreivew(): [
 
     const bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
 
-    // twgl.resizeCanvasToDisplaySize(
-    //   gl.canvas as HTMLCanvasElement,
-    //   window.devicePixelRatio
-    // );
-
-    // resize canvas
-    gl.canvas.width = window.innerWidth * window.devicePixelRatio;
-    gl.canvas.height = (window.innerHeight / 2) * window.devicePixelRatio;
+    // resize canvas to occupy the space
+    const canvasSizeMeasurement = canvasRef.current.getBoundingClientRect();
+    const { width, height } = canvasSizeMeasurement;
+    gl.canvas.width = width * window.devicePixelRatio;
+    gl.canvas.height = height * window.devicePixelRatio;
 
     function render(time) {
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -195,7 +230,18 @@ export function useImagePreivew(): [
         return;
       }
       // calculate spline
-      const [xs, ys, ks] = getPointsArrayFromSpline(toneCurveRef.current);
+      // const [xs, ys, ks] = getPointsArrayFromSpline(toneCurveRef.current);
+      const [xs_red, ys_red, ks_red] = getPointsArrayFromSpline(
+        toneCurveRef.current.red
+      );
+      const [xs_green, ys_green, ks_green] = getPointsArrayFromSpline(
+        toneCurveRef.current.green
+      );
+      const [xs_blue, ys_blue, ks_blue] = getPointsArrayFromSpline(
+        toneCurveRef.current.blue
+      );
+      const [xs_luminance, ys_luminance, ks_luminance] =
+        getPointsArrayFromSpline(toneCurveRef.current.luminance);
 
       const image: HTMLImageElement = imageRef.current;
 
@@ -204,9 +250,19 @@ export function useImagePreivew(): [
         resolution: [gl.canvas.width, gl.canvas.height],
         currentImage: imageTextureRef.current,
         imageSize: [image.width, image.height],
-        splineX: xs,
-        splineY: ys,
-        splineK: ks,
+        backgroundColor: [0.9, 0.9, 0.9, 1],
+        splineX_luminance: xs_luminance,
+        splineY_luminance: ys_luminance,
+        splineK_luminance: ks_luminance,
+        splineX_red: xs_red,
+        splineY_red: ys_red,
+        splineK_red: ks_red,
+        splineX_green: xs_green,
+        splineY_green: ys_green,
+        splineK_green: ks_green,
+        splineX_blue: xs_blue,
+        splineY_blue: ys_blue,
+        splineK_blue: ks_blue,
       };
 
       gl.useProgram(programInfo.program);
