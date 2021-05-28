@@ -11,6 +11,8 @@ interface Props {
   onEndDrag?: () => void;
   value?: Point;
   containerRef?: React.RefObject<HTMLElement>;
+  horizontalMovement?: boolean;
+  verticalMovement?: boolean;
 }
 
 export const ControlPoint = ({
@@ -18,6 +20,8 @@ export const ControlPoint = ({
   onChange,
   containerRef,
   onEndDrag,
+  horizontalMovement,
+  verticalMovement,
 }: Props) => {
   const { panelWidth, panelHeight, elmOffsetX, elmOffsetY } =
     React.useMemo(() => {
@@ -56,7 +60,14 @@ export const ControlPoint = ({
       if (!isDragging) return;
 
       const pointPos = getRelativeMousePosition(containerRef.current, e);
-      onChange && onChange(convertPointToValue(pointPos));
+      const oldPos = convertPointToPixelSpace(value);
+
+      const movementPos = {
+        x: horizontalMovement ? pointPos.x : oldPos.x,
+        y: verticalMovement ? pointPos.y : oldPos.y,
+      };
+
+      onChange && onChange(convertPointToValue(movementPos));
     };
 
     const endDrag = (e: MouseEvent) => {

@@ -45,7 +45,10 @@ export const ChannelCurveEditor = ({
   };
 
   const handleDragDone = (pointIndex: number) => {
+    // don't delete the first point and the last point
+    if (pointIndex === 0 || pointIndex === controlPoints.length - 1) return;
     if (controlPoints[pointIndex].y < 0) {
+      // delete the control point
       controlPoints.splice(pointIndex, 1);
       setControlPoints([...controlPoints]);
     }
@@ -159,6 +162,9 @@ export const ChannelCurveEditor = ({
       >
         {isActive &&
           controlPoints.map((pointValue, index) => {
+            const isCurveEndPoint =
+              index === 0 || index === controlPoints.length - 1;
+
             return (
               <ControlPoint
                 key={index}
@@ -166,6 +172,8 @@ export const ChannelCurveEditor = ({
                 onChange={(val) => handlePointValueChange(val, index)}
                 containerRef={canvasRef as React.RefObject<HTMLElement>}
                 onEndDrag={() => handleDragDone(index)}
+                horizontalMovement={!isCurveEndPoint}
+                verticalMovement={true}
               />
             );
           })}
