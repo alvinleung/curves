@@ -36,6 +36,13 @@ export interface ChannelsControlPoints {
   luminance: Point[];
 }
 
+export enum CURVE_COLOR_CODE {
+  red = "#e64242",
+  green = "#52d652",
+  blue = "#3232dd",
+  luminance = "#a7a7a7",
+}
+
 export const App = () => {
   const [isSelectedImage, setIsSelectedImage] = React.useState(false);
   const [imageBytes, setImageBytes] = React.useState<Uint8Array>();
@@ -45,13 +52,6 @@ export const App = () => {
   const [selectedChannel, setSelectedChannel] = React.useState(
     Channel.LUMINANCE
   );
-
-  const [controlPoints, setControlPoints] = React.useState<ToneCurves>({
-    red: EMPTY_SPLINE,
-    green: EMPTY_SPLINE,
-    blue: EMPTY_SPLINE,
-    luminance: EMPTY_SPLINE,
-  });
 
   React.useEffect(() => {
     onmessage = (event) => {
@@ -119,29 +119,17 @@ export const App = () => {
     // parent.postMessage({ pluginMessage: { type: "create-instance", id } }, "*");
   };
 
-  // return <div>{isSelectedImage && "Image"}</div>;
-
   const [containerRef, { width, height }, refreshMeasurement] =
-    useMeasurement<HTMLDivElement>();
+    useMeasurement<HTMLDivElement>(true);
   const panelWidth = width;
   const panelHeight = height;
 
+  console.log(height);
+
   React.useEffect(() => {
     refreshMeasurement();
+    setCurveColor(CURVE_COLOR_CODE[selectedChannel]);
   }, [selectedChannel]);
-
-  // const { panelWidth, panelHeight, elmOffsetX, elmOffsetY } = (() => {
-  //   if (!containerRef.current)
-  //     return { panelWidth: 0, panelHeight: 0, elmOffsetX: 0, elmOffsetY: 0 };
-
-  //   const bounds = containerRef.current.getBoundingClientRect();
-  //   return {
-  //     panelWidth: bounds.width,
-  //     panelHeight: bounds.height,
-  //     elmOffsetX: bounds.left,
-  //     elmOffsetY: bounds.top,
-  //   };
-  // })();
 
   return (
     <>
@@ -198,26 +186,28 @@ export const App = () => {
           </div>
           <div>
             <ChannelToggle
-              color="#a7a7a7"
+              color={CURVE_COLOR_CODE[Channel.LUMINANCE]}
               isActive={selectedChannel === Channel.LUMINANCE}
               onClick={() => setSelectedChannel(Channel.LUMINANCE)}
             />
             <ChannelToggle
-              color="#e64242"
+              color={CURVE_COLOR_CODE[Channel.RED]}
               isActive={selectedChannel === Channel.RED}
               onClick={() => setSelectedChannel(Channel.RED)}
             />
             <ChannelToggle
-              color="#52d652"
+              color={CURVE_COLOR_CODE[Channel.GREEN]}
               isActive={selectedChannel === Channel.GREEN}
               onClick={() => setSelectedChannel(Channel.GREEN)}
             />
             <ChannelToggle
-              color="#3232dd"
+              color={CURVE_COLOR_CODE[Channel.BLUE]}
               isActive={selectedChannel === Channel.BLUE}
               onClick={() => setSelectedChannel(Channel.BLUE)}
             />
           </div>
+          <button>Apply to Selection</button>
+          <button>Reset</button>
         </div>
       </div>
       {

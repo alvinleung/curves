@@ -15,6 +15,7 @@ interface Props {
   height: number;
   horizontalMovement?: boolean;
   verticalMovement?: boolean;
+  color?: string;
 }
 
 export const ControlPoint = ({
@@ -26,6 +27,7 @@ export const ControlPoint = ({
   containerRef,
   horizontalMovement,
   verticalMovement,
+  color,
 }: Props) => {
   // const { panelWidth, panelHeight, elmOffsetX, elmOffsetY } = (() => {
   //   if (!containerRef.current)
@@ -97,7 +99,8 @@ export const ControlPoint = ({
       cy={convertPointToPixelSpace(value).y}
       r={HANDLE_SIZE}
       onMouseDownCapture={beginDrag}
-      fill="#AAA"
+      stroke={color}
+      fill={"#FFF"}
     />
   );
 };

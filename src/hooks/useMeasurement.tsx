@@ -13,11 +13,9 @@ const initialValue = {
   toJSON: () => {},
 };
 
-export function useMeasurement<T extends HTMLElement>(): [
-  React.RefObject<T>,
-  DOMRect,
-  () => void
-] {
+export function useMeasurement<T extends HTMLElement>(
+  ignoreBorder?: boolean
+): [React.RefObject<T>, DOMRect, () => void] {
   const [measurement, setMeasurement] = React.useState<DOMRect>(initialValue);
   const ref = React.useRef<T>();
 
@@ -25,7 +23,28 @@ export function useMeasurement<T extends HTMLElement>(): [
 
   React.useEffect(() => {
     if (ref.current !== null) {
-      setMeasurement(ref.current.getBoundingClientRect());
+      const boundingRect = ref.current.getBoundingClientRect();
+
+      if (ignoreBorder) {
+        const computedStyle = window.getComputedStyle(ref.current);
+        // fetch the 4 border width values
+        const topBorder = parseFloat(
+          computedStyle.getPropertyValue("border-top-width")
+        );
+        const rightBorder = parseFloat(
+          computedStyle.getPropertyValue("border-right-width")
+        );
+        const bottomBorder = parseFloat(
+          computedStyle.getPropertyValue("border-bottom-width")
+        );
+        const leftBorder = parseFloat(
+          computedStyle.getPropertyValue("border-left-width")
+        );
+
+        boundingRect.width = boundingRect.width - leftBorder - rightBorder;
+        boundingRect.height = boundingRect.height - topBorder - bottomBorder;
+      }
+      setMeasurement(boundingRect);
       return;
     }
   }, [ref.current]);

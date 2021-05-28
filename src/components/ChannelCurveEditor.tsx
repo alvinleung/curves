@@ -74,7 +74,14 @@ export const ChannelCurveEditor = ({
     ctx && updateCanvasCurve(controlPoints);
   }, [controlPoints, ctx, isActive]);
 
+  // update  the curve color
+  React.useEffect(() => {
+    updateCanvasCurve(controlPoints);
+  }, [curveColor]);
+
   const updateCanvasCurve = (points: Point[]) => {
+    if (!ctx) return;
+
     // don't draw anything if nothing is selecteed
     if (!isActive) {
       ctx.clearRect(0, 0, panelWidth, panelHeight);
@@ -161,6 +168,7 @@ export const ChannelCurveEditor = ({
         width={panelWidth}
         height={panelHeight}
         onMouseDown={(e) => isActive && handleControlPointAdd(e)}
+        overflow="visible"
       >
         {isActive &&
           controlPoints.map((pointValue, index) => {
@@ -170,6 +178,7 @@ export const ChannelCurveEditor = ({
             return (
               <ControlPoint
                 key={index}
+                color={curveColor}
                 value={pointValue}
                 onChange={(val) => handlePointValueChange(val, index)}
                 containerRef={canvasRef as React.RefObject<HTMLElement>}
