@@ -134,7 +134,10 @@ export const App = () => {
   return (
     <>
       <div className="layout-grid">
-        <div>
+        <div
+          className="preview-container"
+          style={{ backgroundColor: "rgba(229.5, 229.5, 229.5, 1)" }}
+        >
           <canvas
             style={{ opacity: isSelectedImage ? 1 : 0 }}
             width={window.innerWidth}
@@ -142,6 +145,17 @@ export const App = () => {
             ref={previewCanvasRef}
             className={"image-preivew"}
           />
+          <div className="preview-container__unselected-overlay">
+            <div
+              className={
+                isSelectedImage
+                  ? "preview-container__unselected-overlay-banner preview-container__unselected-overlay-banner--hidden"
+                  : "preview-container__unselected-overlay-banner"
+              }
+            >
+              Please select an image in the document.
+            </div>
+          </div>
         </div>
         <div className="controls-container">
           <div className="curve-container">
@@ -184,45 +198,41 @@ export const App = () => {
               curveColor={curveColor}
             />
           </div>
-          <div>
-            <ChannelToggle
-              color={CURVE_COLOR_CODE[Channel.LUMINANCE]}
-              isActive={selectedChannel === Channel.LUMINANCE}
-              onClick={() => setSelectedChannel(Channel.LUMINANCE)}
-            />
-            <ChannelToggle
-              color={CURVE_COLOR_CODE[Channel.RED]}
-              isActive={selectedChannel === Channel.RED}
-              onClick={() => setSelectedChannel(Channel.RED)}
-            />
-            <ChannelToggle
-              color={CURVE_COLOR_CODE[Channel.GREEN]}
-              isActive={selectedChannel === Channel.GREEN}
-              onClick={() => setSelectedChannel(Channel.GREEN)}
-            />
-            <ChannelToggle
-              color={CURVE_COLOR_CODE[Channel.BLUE]}
-              isActive={selectedChannel === Channel.BLUE}
-              onClick={() => setSelectedChannel(Channel.BLUE)}
-            />
+          <div className="curve__setting-container">
+            <div className="curve__channel-toggle-group">
+              <ChannelToggle
+                color={CURVE_COLOR_CODE[Channel.LUMINANCE]}
+                isActive={selectedChannel === Channel.LUMINANCE}
+                onClick={() => setSelectedChannel(Channel.LUMINANCE)}
+              />
+              <ChannelToggle
+                color={CURVE_COLOR_CODE[Channel.RED]}
+                isActive={selectedChannel === Channel.RED}
+                onClick={() => setSelectedChannel(Channel.RED)}
+              />
+              <ChannelToggle
+                color={CURVE_COLOR_CODE[Channel.GREEN]}
+                isActive={selectedChannel === Channel.GREEN}
+                onClick={() => setSelectedChannel(Channel.GREEN)}
+              />
+              <ChannelToggle
+                color={CURVE_COLOR_CODE[Channel.BLUE]}
+                isActive={selectedChannel === Channel.BLUE}
+                onClick={() => setSelectedChannel(Channel.BLUE)}
+              />
+            </div>
+            <button className="label-button">Reset</button>
           </div>
-          <button>Apply to Selection</button>
-          <button>Reset</button>
+          <div className="control-button-group">
+            <button
+              className="button button--primary"
+              disabled={!isSelectedImage}
+            >
+              Apply Curve
+            </button>
+          </div>
         </div>
       </div>
-      {
-        <div className="unselected-overlay">
-          <div
-            className={
-              isSelectedImage
-                ? "unselected-overlay__content unselected-overlay__content--hidden"
-                : "unselected-overlay__content"
-            }
-          >
-            Please select an image in the document.
-          </div>
-        </div>
-      }
     </>
   );
 };

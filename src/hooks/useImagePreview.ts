@@ -37,8 +37,6 @@ uniform float splineX_luminance[10];
 uniform float splineY_luminance[10];
 uniform float splineK_luminance[10];
 
-
-
 uniform vec4 backgroundColor;
 
 uniform sampler2D currentImage;
