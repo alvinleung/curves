@@ -43,7 +43,7 @@ export const ControlPoint = ({
 
   const [isDragging, setIsDragging] = React.useState(false);
 
-  const HANDLE_SIZE = 5;
+  const HANDLE_SIZE = 4;
 
   const beginDrag = (e: React.MouseEvent) => {
     e.preventDefault();
