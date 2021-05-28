@@ -124,12 +124,22 @@ export const App = () => {
   const panelWidth = width;
   const panelHeight = height;
 
-  console.log(height);
-
   React.useEffect(() => {
     refreshMeasurement();
     setCurveColor(CURVE_COLOR_CODE[selectedChannel]);
   }, [selectedChannel]);
+
+  const clearLuminanceControlPoints = React.useRef<() => void>();
+  const clearBlueControlPoints = React.useRef<() => void>();
+  const clearRedControlPoints = React.useRef<() => void>();
+  const clearGreenControlPoints = React.useRef<() => void>();
+
+  function handleToneCurveClear() {
+    clearLuminanceControlPoints.current();
+    clearRedControlPoints.current();
+    clearGreenControlPoints.current();
+    clearBlueControlPoints.current();
+  }
 
   return (
     <>
@@ -153,7 +163,7 @@ export const App = () => {
                   : "preview-container__unselected-overlay-banner"
               }
             >
-              Please select an image in the document.
+              Select an image from the document to preview tone curve.
             </div>
           </div>
         </div>
@@ -169,6 +179,7 @@ export const App = () => {
                 handleToneCurveChange(Channel.LUMINANCE, curve)
               }
               curveColor={curveColor}
+              clearControlPoints={clearLuminanceControlPoints}
             />
             <ChannelCurveEditor
               key={Channel.RED}
@@ -178,6 +189,7 @@ export const App = () => {
               isActive={selectedChannel === Channel.RED}
               onChange={(curve) => handleToneCurveChange(Channel.RED, curve)}
               curveColor={curveColor}
+              clearControlPoints={clearRedControlPoints}
             />
             <ChannelCurveEditor
               key={Channel.GREEN}
@@ -187,6 +199,7 @@ export const App = () => {
               isActive={selectedChannel === Channel.GREEN}
               onChange={(curve) => handleToneCurveChange(Channel.GREEN, curve)}
               curveColor={curveColor}
+              clearControlPoints={clearGreenControlPoints}
             />
             <ChannelCurveEditor
               key={Channel.BLUE}
@@ -196,6 +209,7 @@ export const App = () => {
               isActive={selectedChannel === Channel.BLUE}
               onChange={(curve) => handleToneCurveChange(Channel.BLUE, curve)}
               curveColor={curveColor}
+              clearControlPoints={clearBlueControlPoints}
             />
           </div>
           <div className="curve__setting-container">
@@ -221,7 +235,9 @@ export const App = () => {
                 onClick={() => setSelectedChannel(Channel.BLUE)}
               />
             </div>
-            <button className="label-button">Reset</button>
+            <button className="label-button" onClick={handleToneCurveClear}>
+              Clear All
+            </button>
           </div>
           <div className="control-button-group">
             <button

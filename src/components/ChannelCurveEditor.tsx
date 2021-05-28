@@ -13,6 +13,7 @@ interface Props {
   height: number;
   onChange: (toneCurve: Spline) => void;
   curveColor: string;
+  clearControlPoints: React.MutableRefObject<Function>;
 }
 
 export const ChannelCurveEditor = ({
@@ -22,6 +23,7 @@ export const ChannelCurveEditor = ({
   isActive,
   onChange,
   curveColor,
+  clearControlPoints,
 }: Props) => {
   const initialPointValues = [
     { x: 0.0, y: 0.0 },
@@ -32,6 +34,10 @@ export const ChannelCurveEditor = ({
 
   const [controlPoints, setControlPoints] =
     React.useState<Point[]>(initialPointValues);
+
+  clearControlPoints.current = React.useCallback(() => {
+    setControlPoints(initialPointValues);
+  }, []);
 
   const handlePointValueChange = (point: Point, pointIndex: number) => {
     const clampedPoint = {
