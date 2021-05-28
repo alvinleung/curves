@@ -148,9 +148,9 @@ void main() {
   float gLuminance = atSpline(gOriginal, splineX_luminance, splineY_luminance, splineK_luminance);
   float bLuminance = atSpline(bOriginal, splineX_luminance, splineY_luminance, splineK_luminance);
 
-  float r = atSpline(rOriginal, splineX_red, splineY_red, splineK_red);
-  float g = atSpline(gOriginal, splineX_green, splineY_green, splineK_green);
-  float b = atSpline(bOriginal, splineX_blue, splineY_blue, splineK_blue);
+  float r = atSpline(rLuminance, splineX_red, splineY_red, splineK_red);
+  float g = atSpline(gLuminance, splineX_green, splineY_green, splineK_green);
+  float b = atSpline(bLuminance, splineX_blue, splineY_blue, splineK_blue);
 
   float rChannelOut = r;
   float gChannelOut = g;
@@ -161,14 +161,14 @@ void main() {
 }
 `;
 
-interface ToneCurves {
+export interface ToneCurves {
   red: Spline;
   green: Spline;
   blue: Spline;
   luminance: Spline;
 }
 
-const emptySpline = new Spline([0, 1], [0, 1]);
+export const EMPTY_SPLINE = new Spline([0, 1], [0, 1]);
 
 export function useImagePreivew(): [
   React.Ref<HTMLCanvasElement>,
@@ -178,10 +178,10 @@ export function useImagePreivew(): [
 ] {
   const canvasRef = React.useRef<HTMLCanvasElement>();
   const toneCurveRef = React.useRef<ToneCurves>({
-    red: emptySpline,
-    green: emptySpline,
-    blue: emptySpline,
-    luminance: emptySpline,
+    red: EMPTY_SPLINE,
+    green: EMPTY_SPLINE,
+    blue: EMPTY_SPLINE,
+    luminance: EMPTY_SPLINE,
   });
   const _gl = React.useRef<WebGLRenderingContext>();
 

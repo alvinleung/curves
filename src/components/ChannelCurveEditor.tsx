@@ -1,5 +1,6 @@
 import Spline from "cubic-spline-ts";
 import * as React from "react";
+import { Channel } from "../App";
 import { getRelativeMousePosition } from "../hooks/relativeMousePos";
 import { useCanvas } from "../hooks/useCanvas";
 import { useMeasurement } from "../hooks/useMeasurement";
@@ -24,8 +25,6 @@ export const ChannelCurveEditor = ({
 }: Props) => {
   const initialPointValues = [
     { x: 0.0, y: 0.0 },
-    { x: 0.25, y: 0.25 },
-    { x: 0.75, y: 0.75 },
     { x: 1, y: 1 },
   ];
 
@@ -55,6 +54,7 @@ export const ChannelCurveEditor = ({
   };
   const panelWidth = width;
   const panelHeight = height;
+
   const curveEditorWidth = panelWidth * window.devicePixelRatio;
   const curveEditorHeight = panelHeight * window.devicePixelRatio;
 
@@ -143,10 +143,12 @@ export const ChannelCurveEditor = ({
 
   return (
     <div
-      ref={containerRef}
+      ref={isActive ? containerRef : null}
       className={"curve"}
       style={{
         height: window.innerHeight / 2,
+        width: "100%",
+        display: isActive ? "block" : "none",
       }}
     >
       <canvas
@@ -171,6 +173,8 @@ export const ChannelCurveEditor = ({
                 value={pointValue}
                 onChange={(val) => handlePointValueChange(val, index)}
                 containerRef={canvasRef as React.RefObject<HTMLElement>}
+                width={panelWidth}
+                height={panelHeight}
                 onEndDrag={() => handleDragDone(index)}
                 horizontalMovement={!isCurveEndPoint}
                 verticalMovement={true}

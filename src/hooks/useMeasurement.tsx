@@ -1,4 +1,5 @@
 import * as React from "react";
+import useForceUpdate from "use-force-update";
 
 const initialValue = {
   x: 0,
@@ -14,10 +15,13 @@ const initialValue = {
 
 export function useMeasurement<T extends HTMLElement>(): [
   React.RefObject<T>,
-  DOMRect
+  DOMRect,
+  () => void
 ] {
   const [measurement, setMeasurement] = React.useState<DOMRect>(initialValue);
   const ref = React.useRef<T>();
+
+  const update = useForceUpdate();
 
   React.useEffect(() => {
     if (ref.current !== null) {
@@ -26,5 +30,5 @@ export function useMeasurement<T extends HTMLElement>(): [
     }
   }, [ref.current]);
 
-  return [ref, measurement];
+  return [ref, measurement, update];
 }

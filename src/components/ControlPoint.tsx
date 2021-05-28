@@ -10,7 +10,9 @@ interface Props {
   onChange?: (val: Point) => void;
   onEndDrag?: () => void;
   value?: Point;
-  containerRef?: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement>;
+  width: number;
+  height: number;
   horizontalMovement?: boolean;
   verticalMovement?: boolean;
 }
@@ -18,24 +20,28 @@ interface Props {
 export const ControlPoint = ({
   value,
   onChange,
-  containerRef,
+  width,
+  height,
   onEndDrag,
+  containerRef,
   horizontalMovement,
   verticalMovement,
 }: Props) => {
-  const { panelWidth, panelHeight, elmOffsetX, elmOffsetY } =
-    React.useMemo(() => {
-      if (!containerRef.current)
-        return { panelWidth: 0, panelHeight: 0, elmOffsetX: 0, elmOffsetY: 0 };
+  // const { panelWidth, panelHeight, elmOffsetX, elmOffsetY } = (() => {
+  //   if (!containerRef.current)
+  //     return { panelWidth: 0, panelHeight: 0, elmOffsetX: 0, elmOffsetY: 0 };
 
-      const bounds = containerRef.current.getBoundingClientRect();
-      return {
-        panelWidth: bounds.width,
-        panelHeight: bounds.height,
-        elmOffsetX: bounds.left,
-        elmOffsetY: bounds.top,
-      };
-    }, [containerRef.current]);
+  //   const bounds = containerRef.current.getBoundingClientRect();
+  //   return {
+  //     panelWidth: bounds.width,
+  //     panelHeight: bounds.height,
+  //     elmOffsetX: bounds.left,
+  //     elmOffsetY: bounds.top,
+  //   };
+  // })();
+
+  const panelWidth = width;
+  const panelHeight = height;
 
   function convertPointToPixelSpace(point: Point) {
     return { x: point.x * panelWidth, y: (1 - point.y) * panelHeight };

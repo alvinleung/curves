@@ -26,6 +26,7 @@
     "react-dom": "^16.13.1",
     "react-figma": "latest",
     "twgl.js": "^4.19.1",
+    "use-force-update": "^1.0.7",
     "yoga-layout-prebuilt": "^1.9.3"
   },
   "devDependencies": {
