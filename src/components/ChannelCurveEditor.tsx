@@ -50,6 +50,9 @@ export const ChannelCurveEditor = ({
   };
 
   const handleDragDone = (pointIndex: number) => {
+    // reset the creation mouse drag
+    setNewPointIndex(null);
+
     // don't delete the first point and the last point
     if (pointIndex === 0 || pointIndex === controlPoints.length - 1) return;
     if (controlPoints[pointIndex].y < 0) {
@@ -128,6 +131,8 @@ export const ChannelCurveEditor = ({
     // ctx.moveTo(x * panelWidth, y * panelHeight);
   };
 
+  const [newPointIndex, setNewPointIndex] = React.useState<number>(null);
+
   const handleControlPointAdd = (e: React.MouseEvent) => {
     const relativeMosuePos = getRelativeMousePosition(containerRef.current, e);
 
@@ -135,7 +140,7 @@ export const ChannelCurveEditor = ({
     const addY = relativeMosuePos.y / panelHeight;
 
     // find the appropriate index
-    const insertIndex = controlPoints.reduce((result, current, index) => {
+    const insertionIndex = controlPoints.reduce((result, current, index) => {
       const nextItem = controlPoints[index + 1];
 
       if (!nextItem) return result;
@@ -149,9 +154,10 @@ export const ChannelCurveEditor = ({
 
     // new array
     const copy = [...controlPoints];
-    copy.splice(insertIndex + 1, 0, { x: addX, y: 1 - addY });
+    copy.splice(insertionIndex + 1, 0, { x: addX, y: 1 - addY });
 
     setControlPoints([...copy]);
+    setNewPointIndex(insertionIndex + 1);
   };
 
   return (
@@ -193,6 +199,7 @@ export const ChannelCurveEditor = ({
                 onEndDrag={() => handleDragDone(index)}
                 horizontalMovement={!isCurveEndPoint}
                 verticalMovement={true}
+                shouldDrag={index === newPointIndex}
               />
             );
           })}

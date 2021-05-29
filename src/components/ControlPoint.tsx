@@ -16,6 +16,7 @@ interface Props {
   horizontalMovement?: boolean;
   verticalMovement?: boolean;
   color?: string;
+  shouldDrag: boolean;
 }
 
 export const ControlPoint = ({
@@ -27,6 +28,7 @@ export const ControlPoint = ({
   containerRef,
   horizontalMovement,
   verticalMovement,
+  shouldDrag = false,
   color,
 }: Props) => {
   // const { panelWidth, panelHeight, elmOffsetX, elmOffsetY } = (() => {
@@ -65,7 +67,7 @@ export const ControlPoint = ({
 
   React.useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
+      if (!isDragging && !shouldDrag) return;
 
       const pointPos = getRelativeMousePosition(containerRef.current, e);
       const oldPos = convertPointToPixelSpace(value);
@@ -90,7 +92,7 @@ export const ControlPoint = ({
       document.body.removeEventListener("mousemove", handleMouseMove);
       document.body.removeEventListener("mouseup", endDrag);
     };
-  }, [isDragging]);
+  }, [isDragging, shouldDrag]);
 
   return (
     <circle
