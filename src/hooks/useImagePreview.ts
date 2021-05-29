@@ -1,6 +1,7 @@
 import Spline from "cubic-spline-ts";
 import * as React from "react";
 import * as twgl from "twgl.js";
+import { decode, encode } from "../ImageManipulation";
 
 const VERT = `
 precision mediump float;
@@ -172,7 +173,8 @@ export function useImagePreivew(): [
   React.Ref<HTMLCanvasElement>,
   WebGLRenderingContext,
   React.MutableRefObject<ToneCurves>,
-  (image: HTMLImageElement) => void
+  (image: HTMLImageElement) => void,
+  () => Promise<Uint8Array>
 ] {
   const canvasRef = React.useRef<HTMLCanvasElement>();
   const toneCurveRef = React.useRef<ToneCurves>({
@@ -185,6 +187,17 @@ export function useImagePreivew(): [
 
   const imageTextureRef = React.useRef<WebGLTexture>(null);
   const imageRef = React.useRef<HTMLImageElement>(null);
+  const mainImageEffectRenderer = React.useRef<ImageEffectRenderer>(null);
+
+  function createPreviewTexture(
+    gl: WebGLRenderingContext,
+    image: HTMLImageElement
+  ) {
+    return twgl.createTexture(gl, {
+      src: image,
+      mag: gl.NEAREST,
+    });
+  }
 
   function changeImage(image: HTMLImageElement) {
     if (!_gl.current) {
@@ -192,10 +205,9 @@ export function useImagePreivew(): [
       return;
     }
     imageRef.current = image;
-    imageTextureRef.current = twgl.createTexture(_gl.current, {
-      src: image,
-      mag: _gl.current.NEAREST,
-    });
+    mainImageEffectRenderer.current.setTexture(
+      createPreviewTexture(_gl.current, image)
+    );
   }
 
   React.useEffect(() => {
@@ -203,77 +215,66 @@ export function useImagePreivew(): [
 
     // canvas.style.width = "100%";
     // canvas.style.height = "50%";
+    mainImageEffectRenderer.current = createImageEffectRenderer(
+      canvas,
+      toneCurveRef,
+      imageRef,
+      true
+    );
+    _gl.current = mainImageEffectRenderer.current.gl;
 
-    const gl = canvas.getContext("webgl");
-    _gl.current = gl;
-    const programInfo = twgl.createProgramInfo(gl, [VERT, FRAG]);
-
-    const arrays = {
-      position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0],
-    };
-
-    const bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
-
-    // resize canvas to occupy the space
-    const canvasSizeMeasurement = canvasRef.current.getBoundingClientRect();
-    const { width, height } = canvasSizeMeasurement;
-    gl.canvas.width = width * window.devicePixelRatio;
-    gl.canvas.height = height * window.devicePixelRatio;
-
-    function render(time) {
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-      if (!imageTextureRef.current) {
-        requestAnimationFrame(render);
-        return;
-      }
-      // calculate spline
-      // const [xs, ys, ks] = getPointsArrayFromSpline(toneCurveRef.current);
-      const [xs_red, ys_red, ks_red] = getPointsArrayFromSpline(
-        toneCurveRef.current.red
-      );
-      const [xs_green, ys_green, ks_green] = getPointsArrayFromSpline(
-        toneCurveRef.current.green
-      );
-      const [xs_blue, ys_blue, ks_blue] = getPointsArrayFromSpline(
-        toneCurveRef.current.blue
-      );
-      const [xs_luminance, ys_luminance, ks_luminance] =
-        getPointsArrayFromSpline(toneCurveRef.current.luminance);
-
-      const image: HTMLImageElement = imageRef.current;
-
-      const uniforms = {
-        color: [0.5, 0.5, 0.5, 1],
-        resolution: [gl.canvas.width, gl.canvas.height],
-        currentImage: imageTextureRef.current,
-        imageSize: [image.width, image.height],
-        backgroundColor: [0.9, 0.9, 0.9, 1],
-        splineX_luminance: xs_luminance,
-        splineY_luminance: ys_luminance,
-        splineK_luminance: ks_luminance,
-        splineX_red: xs_red,
-        splineY_red: ys_red,
-        splineK_red: ks_red,
-        splineX_green: xs_green,
-        splineY_green: ys_green,
-        splineK_green: ks_green,
-        splineX_blue: xs_blue,
-        splineY_blue: ys_blue,
-        splineK_blue: ks_blue,
-      };
-
-      gl.useProgram(programInfo.program);
-      twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-      twgl.setUniforms(programInfo, uniforms);
-      twgl.drawBufferInfo(gl, bufferInfo);
-
-      requestAnimationFrame(render);
-    }
-    requestAnimationFrame(render);
+    mainImageEffectRenderer.current.beginRenderLoop();
   }, []);
 
-  return [canvasRef, _gl.current, toneCurveRef, changeImage];
+  const getAdjustedImageBytes = async () => {
+    // STEP1 render with the gl canvas first
+
+    // const imageSize = imageRef.current.width * imageRef.current.height * 4;
+
+    // let pixels: Uint8Array = new Uint8Array(imageSize);
+    // _gl.current.readPixels(
+    //   0,
+    //   0,
+    //   imageRef.current.width,
+    //   imageRef.current.height,
+    //   _gl.current.RGBA,
+    //   _gl.current.UNSIGNED_BYTE,
+    //   pixels
+    // );
+
+    const renderingCanvas = document.createElement("canvas");
+    renderingCanvas.width = imageRef.current.width;
+    renderingCanvas.height = imageRef.current.height;
+    const { renderOnce, gl, setTexture } = createImageEffectRenderer(
+      renderingCanvas,
+      toneCurveRef,
+      imageRef,
+      false
+    );
+    setTexture(createPreviewTexture(gl, imageRef.current));
+    renderOnce();
+
+    const encodingCanvas = document.createElement("canvas");
+    encodingCanvas.width = imageRef.current.width;
+    encodingCanvas.height = imageRef.current.height;
+    // draw webgl canvas onto the 2d canvas
+    const ctx = encodingCanvas.getContext("2d");
+    ctx.drawImage(renderingCanvas, 0, 0);
+
+    return await encode(
+      encodingCanvas,
+      ctx,
+      ctx.getImageData(0, 0, encodingCanvas.width, encodingCanvas.height)
+    );
+  };
+
+  return [
+    canvasRef,
+    _gl.current,
+    toneCurveRef,
+    changeImage,
+    getAdjustedImageBytes,
+  ];
 }
 
 export function getPointsArrayFromSpline(spline: Spline) {
@@ -282,4 +283,104 @@ export function getPointsArrayFromSpline(spline: Spline) {
   const ks = spline.ks;
 
   return [xs, ys, ks];
+}
+
+interface ImageEffectRenderer {
+  beginRenderLoop: () => void;
+  renderOnce: () => void;
+  setTexture: (texture: WebGLTexture) => void;
+  gl: WebGLRenderingContext;
+}
+
+function createImageEffectRenderer(
+  canvas: HTMLCanvasElement,
+  toneCurveRef,
+  imageRef,
+  resizeToFullScreen = false
+): ImageEffectRenderer {
+  let texture = null;
+  const gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
+  const programInfo = twgl.createProgramInfo(gl, [VERT, FRAG]);
+
+  const arrays = {
+    position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0],
+  };
+
+  const bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+
+  // resize canvas to occupy the space
+  if (resizeToFullScreen) {
+    const canvasSizeMeasurement = canvas.getBoundingClientRect();
+    const { width, height } = canvasSizeMeasurement;
+    gl.canvas.width = width * window.devicePixelRatio;
+    gl.canvas.height = height * window.devicePixelRatio;
+  } else {
+  }
+
+  function render(time) {
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    if (!texture) {
+      requestAnimationFrame(render);
+      return;
+    }
+    // calculate spline
+    // const [xs, ys, ks] = getPointsArrayFromSpline(toneCurveRef.current);
+    const [xs_red, ys_red, ks_red] = getPointsArrayFromSpline(
+      toneCurveRef.current.red
+    );
+    const [xs_green, ys_green, ks_green] = getPointsArrayFromSpline(
+      toneCurveRef.current.green
+    );
+    const [xs_blue, ys_blue, ks_blue] = getPointsArrayFromSpline(
+      toneCurveRef.current.blue
+    );
+    const [xs_luminance, ys_luminance, ks_luminance] = getPointsArrayFromSpline(
+      toneCurveRef.current.luminance
+    );
+
+    const image: HTMLImageElement = imageRef.current;
+
+    const uniforms = {
+      color: [0.5, 0.5, 0.5, 1],
+      resolution: [gl.canvas.width, gl.canvas.height],
+      currentImage: texture,
+      imageSize: [image.width, image.height],
+      backgroundColor: [0.9, 0.9, 0.9, 1],
+      splineX_luminance: xs_luminance,
+      splineY_luminance: ys_luminance,
+      splineK_luminance: ks_luminance,
+      splineX_red: xs_red,
+      splineY_red: ys_red,
+      splineK_red: ks_red,
+      splineX_green: xs_green,
+      splineY_green: ys_green,
+      splineK_green: ks_green,
+      splineX_blue: xs_blue,
+      splineY_blue: ys_blue,
+      splineK_blue: ks_blue,
+    };
+
+    gl.useProgram(programInfo.program);
+    twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+    twgl.setUniforms(programInfo, uniforms);
+    twgl.drawBufferInfo(gl, bufferInfo);
+  }
+  const renderLoop = (time) => {
+    render(time);
+    requestAnimationFrame(renderLoop);
+  };
+  const beginRenderLoop = () => {
+    requestAnimationFrame(renderLoop);
+  };
+
+  const renderOnce = () => {
+    render(0);
+  };
+
+  const setTexture = (newTexture: WebGLTexture) => {
+    texture = newTexture;
+  };
+
+  return { beginRenderLoop, renderOnce, gl, setTexture };
 }

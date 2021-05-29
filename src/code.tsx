@@ -31,7 +31,8 @@ figma.ui.onmessage = async (message) => {
       const paint = currentSelectedNode.fills[0];
 
       const newPaint = JSON.parse(JSON.stringify(paint));
-      newPaint.imageHash = figma.createImage(newBytes).hash;
+      const hash = figma.createImage(newBytes).hash;
+      newPaint.imageHash = hash;
 
       currentSelectedNode.fills = [newPaint];
       break;

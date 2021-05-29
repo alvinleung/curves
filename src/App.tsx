@@ -7,6 +7,7 @@ import {
   createDecodingCanvas,
   createImageFromByte,
   decode,
+  encode,
 } from "./ImageManipulation";
 import { getRelativeMousePosition } from "./hooks/relativeMousePos";
 import {
@@ -47,7 +48,13 @@ export const App = () => {
   const [isSelectedImage, setIsSelectedImage] = React.useState(false);
   const [imageBytes, setImageBytes] = React.useState<Uint8Array>();
 
-  const [previewCanvasRef, regl, toneCurveRef, changeImage] = useImagePreivew();
+  const [
+    previewCanvasRef,
+    regl,
+    toneCurveRef,
+    changeImage,
+    getAdjustedImageBytes,
+  ] = useImagePreivew();
   const [curveColor, setCurveColor] = React.useState("#555");
   const [selectedChannel, setSelectedChannel] = React.useState(
     Channel.LUMINANCE
@@ -80,6 +87,19 @@ export const App = () => {
       }
     };
   }, []);
+
+  const handleApplyCurveClick = async () => {
+    if (!isSelectedImage) return;
+
+    // STEP 1 - get the image from preview
+    const imageBytes = await getAdjustedImageBytes();
+
+    // STEP 2 - apply
+    parent.postMessage(
+      { pluginMessage: { type: "image-bytes-update", bytes: imageBytes } },
+      "*"
+    );
+  };
 
   const applyCurveToPreview = (channel: Channel, toneCurve: Spline) => {
     // set luminance by default first
@@ -163,7 +183,7 @@ export const App = () => {
                   : "preview-container__unselected-overlay-banner"
               }
             >
-              Select an image from the document to preview tone curve.
+              Select an image from the document to preview adjustment.
             </div>
           </div>
         </div>
@@ -243,6 +263,7 @@ export const App = () => {
             <button
               className="button button--primary"
               disabled={!isSelectedImage}
+              onClick={handleApplyCurveClick}
             >
               Apply Curve
             </button>
