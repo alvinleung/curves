@@ -183,7 +183,7 @@ export const App = () => {
                   : "preview-container__unselected-overlay-banner"
               }
             >
-              Select an image from the document to preview adjustment.
+              Select an image from the document to start adjusting.
             </div>
           </div>
         </div>
@@ -256,7 +256,7 @@ export const App = () => {
               />
             </div>
             <button className="label-button" onClick={handleToneCurveClear}>
-              Clear All
+              Reset All
             </button>
           </div>
           <div className="control-button-group">
