@@ -67,6 +67,11 @@ export const ChannelCurveEditor = ({
   const curveEditorWidth = panelWidth * window.devicePixelRatio;
   const curveEditorHeight = panelHeight * window.devicePixelRatio;
 
+  const createSplineFromPoints = (controlPoints) => {
+    let [xs, ys] = getXsYs(controlPoints);
+    return new Spline(xs, ys);
+  };
+
   React.useEffect(() => {
     // send control point option change to main thread
     parent.postMessage(
@@ -74,8 +79,7 @@ export const ChannelCurveEditor = ({
       "*"
     );
     // update teh image curve
-    const [xs, ys] = getXsYs(controlPoints);
-    onChange && onChange(new Spline(xs, ys));
+    onChange && onChange(createSplineFromPoints(controlPoints));
   }, [controlPoints]);
 
   React.useEffect(() => {
@@ -93,33 +97,46 @@ export const ChannelCurveEditor = ({
 
     // don't draw anything if nothing is selecteed
     if (!isActive) {
-      ctx.clearRect(0, 0, panelWidth, panelHeight);
+      ctx.clearRect(0, 0, curveEditorWidth, curveEditorHeight);
       return;
     }
 
-    // generate a spline curve first
-    const xs = [];
-    const ys = [];
-
-    points.forEach((point) => {
-      xs.push(point.x);
-      ys.push(point.y);
-    });
-
-    // will generate natual curves base on the points
-    const spline = new Spline(xs, ys);
-
-    // log out the derivatives on the curve
-    // console.log(spline.ks);
-
-    // draw the curve on canvas
     ctx.clearRect(0, 0, curveEditorWidth, curveEditorHeight);
+
+    // STEP 1 - RENDER GRIDS
+    // render grids
+    const cols = 4;
+    const colSize = curveEditorWidth / cols;
+    const rows = 4;
+    const rowSize = curveEditorHeight / rows;
+    // the grid colour
+    ctx.strokeStyle = "#EEE";
+    for (let i = 1; i < cols; i++) {
+      ctx.beginPath();
+      ctx.moveTo(colSize * i, 0);
+      ctx.lineTo(colSize * i, curveEditorHeight);
+      ctx.stroke();
+    }
+    for (let i = 1; i < rows; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, rowSize * i);
+      ctx.lineTo(curveEditorWidth, rowSize * i);
+      ctx.stroke();
+    }
+
+    // STEP 2 - RENDER SPLINE
+    // will generate natual curves base on the points
+    const spline = createSplineFromPoints(controlPoints);
+
+    const lineWeight = 1;
+    ctx.lineWidth = lineWeight * window.devicePixelRatio;
 
     ctx.strokeStyle = curveColor;
 
     ctx.beginPath();
     // interpolate a line at a higher resolution
     const iterations = 50;
+
     for (let x = 0; x < iterations; x++) {
       const xStepSize = clamp(x / iterations);
       const y = clamp(spline.at(xStepSize));
@@ -128,7 +145,6 @@ export const ChannelCurveEditor = ({
     // connect to the last point
     ctx.lineTo(curveEditorWidth, (1 - spline.at(1)) * curveEditorHeight);
     ctx.stroke();
-    // ctx.moveTo(x * panelWidth, y * panelHeight);
   };
 
   const [newPointIndex, setNewPointIndex] = React.useState<number>(null);
